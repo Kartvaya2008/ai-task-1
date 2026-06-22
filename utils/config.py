@@ -17,9 +17,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # LLM — API key hardcoded, no .env needed
-    groq_api_key:  str  = "ADD_YOUR_API"
-    llm_model:     str  = "llama-3.3-70b-versatile"
+    # LLM — Groq (primary) + OpenRouter (fallback)
+    groq_api_key:        str = "ADD_YOUR_API"
+    llm_model:           str = "llama-3.3-70b-versatile"
+    openrouter_api_key:  str = ""
+    openrouter_model:    str = "meta-llama/llama-3.3-70b-instruct:free"
 
     # Embeddings (local, no key needed)
     embedding_model: str = "all-MiniLM-L6-v2"

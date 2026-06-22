@@ -133,6 +133,14 @@ class FAISSStore:
             # In production, use faiss.IndexIDMap for O(1) deletion.
             self._init_empty_index()
             self._meta = surviving
+            if surviving:
+                from services.embedding_service import embed_texts
+                texts = [m.text for m in surviving]
+                embeddings = embed_texts(texts)
+                norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+                norms = np.where(norms == 0, 1e-9, norms)
+                normed = (embeddings / norms).astype(np.float32)
+                self._index.add(normed)
             self.save()
 
         logger.info("Deleted %d chunks for document %s", removed, document_id)

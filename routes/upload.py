@@ -22,6 +22,7 @@ from services.document_service import (
     ingest_document,
     list_documents,
     register_document,
+    delete_document_registry,
 )
 from utils.config import Settings, get_settings
 from utils.logger import get_logger
@@ -129,6 +130,9 @@ async def delete_document(document_id: str):
     fp = Path(doc.get("file_path", ""))
     if fp.exists():
         fp.unlink(missing_ok=True)
+
+    # Remove from registry
+    delete_document_registry(document_id)
 
     logger.info("Deleted document %s (%d chunks removed)", document_id, removed)
     return None   # 204 No Content

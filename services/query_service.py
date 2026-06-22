@@ -66,6 +66,7 @@ def run_query(
             llm_ms=0.0,
             top_similarity=0.0,
             question=question,
+            provider_used=None,
         )
 
     top_sim = results[0][1]
@@ -87,7 +88,7 @@ def run_query(
     ]
 
     # ── Step 4: Generate answer (LLM call 1) ─────────────────────────────────
-    answer, llm_ms = generate_answer(question, context_chunks)
+    answer, llm_ms, provider_used = generate_answer(question, context_chunks)
 
     # ── Step 5: Evaluate answer (LLM call 2) ─────────────────────────────────
     evaluation, eval_ms = evaluate_answer(question, answer, context_chunks)
@@ -123,4 +124,5 @@ def run_query(
         llm_ms=round(llm_ms + eval_ms, 2),
         top_similarity=round(top_sim, 4),
         question=question,
+        provider_used=provider_used,
     )

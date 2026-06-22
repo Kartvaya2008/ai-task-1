@@ -77,6 +77,16 @@ def register_document(document_id: str, filename: str, file_path: str) -> None:
     _save_registry()
 
 
+def delete_document_registry(document_id: str) -> bool:
+    global _registry
+    if document_id in _registry:
+        del _registry[document_id]
+        _save_registry()
+        logger.info("Removed document %s from registry", document_id)
+        return True
+    return False
+
+
 def _update_status(
     document_id: str,
     status: DocumentStatus,

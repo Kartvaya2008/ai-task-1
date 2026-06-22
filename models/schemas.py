@@ -74,6 +74,9 @@ class QueryResponse(BaseModel):
     llm_ms:           float  = Field(..., description="LLM generation latency in ms")
     top_similarity:   float  = Field(..., description="Highest similarity score in retrieved set")
     question:         str
+    provider_used:    Optional[str] = Field(
+        None, description="LLM provider that generated the answer: groq or openrouter"
+    )
 
 
 # ── Listing ────────────────────────────────────────────────────────────────────
