@@ -42,23 +42,14 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[f"{cfg.rate_limit
 # ── Lifespan ───────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: load FAISS index and warm up embedding model."""
-    logger.info("═══════════════════════════════════════")
-    logger.info("  RAG API  starting up")
-    logger.info("═══════════════════════════════════════")
+    """Startup: load FAISS index safely."""
+    logger.info("=======================================")
+    logger.info("  RAG API starting up")
+    logger.info("=======================================")
 
-    # Load vector store
+    # Load vector store safely
     store.load()
     logger.info("Vector store ready (%d chunks)", store.total_chunks)
-
-    # Warm up embedding model (downloads on first run, ~80 MB)
-    logger.info("Warming up embedding model: %s", cfg.embedding_model)
-    try:
-        from services.embedding_service import get_embedding_model
-        get_embedding_model()
-        logger.info("Embedding model ready ✓")
-    except Exception as e:
-        logger.warning("Embedding model warm-up failed (will retry on first request): %s", e)
 
     yield   # ← application runs here
 
@@ -82,14 +73,22 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS (allow all origins for local dev; restrict in production)
+# CORS configuration
+origins = [
+    origin.strip()
+    for origin in cfg.allowed_origins.split(",")
+    if origin.strip() and origin.strip() != "*"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins if origins else ["http://localhost:3000", "http://localhost:8000"],
+    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:.*|http://127\.0\.0\.1:.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # ── Rate-limited middleware ────────────────────────────────────────────────────
@@ -98,12 +97,13 @@ async def log_requests(request: Request, call_next):
     """Log every request with method, path, and response status."""
     response = await call_next(request)
     logger.info(
-        "%s %s → %d",
+        "%s %s -> %d",
         request.method,
         request.url.path,
         response.status_code,
     )
     return response
+
 
 
 # ── Routers ────────────────────────────────────────────────────────────────────

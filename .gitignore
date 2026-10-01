@@ -31,6 +31,8 @@ vector_store/documents.json
 .DS_Store
 Thumbs.db
 
-# Model cache (downloaded at runtime)
+# Model cache (downloaded at runtime by fastembed)
 .cache/
 sentence_transformers/
+fastembed_cache/
+models/

@@ -64,19 +64,33 @@ class FAISSStore:
     # ── Persistence ────────────────────────────────────────────────────────────
 
     def load(self) -> None:
-        """Load index + metadata from disk (no-op if files don't exist)."""
+        """Load index + metadata from disk (no-op if files don't exist). Reset safely if corrupted/incompatible."""
         idx_file  = Path(str(self.index_path) + ".index")
         meta_file = self.meta_path
 
         if idx_file.exists() and meta_file.exists():
-            self._index = faiss.read_index(str(idx_file))
-            with open(meta_file) as f:
-                raw = json.load(f)
-            self._meta = [ChunkMeta(**m) for m in raw]
-            logger.info("Loaded FAISS index: %d vectors", self._index.ntotal)
+            try:
+                index = faiss.read_index(str(idx_file))
+                with open(meta_file, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                meta = [ChunkMeta(**m) for m in raw]
+                if index.d != self.dim or index.ntotal != len(meta):
+                    raise ValueError(
+                        f"FAISS index mismatch: index dim {index.d} vs target {self.dim}, "
+                        f"vectors {index.ntotal} vs metadata items {len(meta)}"
+                    )
+                self._index = index
+                self._meta  = meta
+                logger.info("Loaded FAISS index: %d vectors", self._index.ntotal)
+            except Exception as exc:
+                logger.warning("Failed to load existing FAISS index/metadata (%s). Resetting store.", exc)
+                self._init_empty_index()
+                self._meta = []
+                self.save()
         else:
             self._init_empty_index()
             logger.info("Initialised fresh FAISS index (dim=%d)", self.dim)
+
 
     def save(self) -> None:
         """Persist index + metadata to disk."""

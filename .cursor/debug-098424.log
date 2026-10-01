@@ -1,0 +1,2 @@
+{"sessionId":"098424","location":"app.js:sendQuestion","message":"query_request","data":{"question":"hoo","scope":"all"},"timestamp":1782160443516,"hypothesisId":"H4"}
+{"sessionId":"098424","location":"app.js:sendQuestion","message":"query_response","data":{"ok":true,"provider":null,"sources":2,"hasUnavailable":true},"timestamp":1782160444915,"hypothesisId":"H4"}

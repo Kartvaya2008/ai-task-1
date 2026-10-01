@@ -34,34 +34,55 @@ class Settings(BaseSettings):
     # Rate limiting
     rate_limit: int = 20   # requests / minute / IP
 
+    # CORS
+    allowed_origins: str = "http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000"
+
     # File limits
     max_file_size: int = 10_485_760  # 10 MB
 
-    # Paths
+    # Paths & Data Directory
+    data_dir:          str = ""
     upload_dir:        str = "uploads"
     faiss_index_path:  str = "vector_store/faiss_index"
     metadata_path:     str = "vector_store/metadata.json"
+    documents_path:    str = "vector_store/documents.json"
     log_file:          str = "logs/rag.log"
 
     @property
+    def base_data_path(self) -> Path:
+        if self.data_dir and self.data_dir.strip():
+            p = Path(self.data_dir.strip())
+            p.mkdir(parents=True, exist_ok=True)
+            return p
+        return Path(".")
+
+    @property
     def upload_path(self) -> Path:
-        p = Path(self.upload_dir)
+        p = self.base_data_path / self.upload_dir
         p.mkdir(parents=True, exist_ok=True)
         return p
 
     @property
     def faiss_path(self) -> Path:
-        p = Path(self.faiss_index_path)
+        p = self.base_data_path / self.faiss_index_path
         p.parent.mkdir(parents=True, exist_ok=True)
         return p
 
     @property
     def meta_path(self) -> Path:
-        return Path(self.metadata_path)
+        p = self.base_data_path / self.metadata_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def docs_path(self) -> Path:
+        p = self.base_data_path / self.documents_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
 
     @property
     def log_path(self) -> Path:
-        p = Path(self.log_file)
+        p = self.base_data_path / self.log_file
         p.parent.mkdir(parents=True, exist_ok=True)
         return p
 

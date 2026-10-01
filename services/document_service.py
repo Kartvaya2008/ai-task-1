@@ -36,23 +36,32 @@ logger = get_logger("rag.document")
 
 # ── Document registry ──────────────────────────────────────────────────────────
 # Stored as {document_id: DocumentInfo dict} in a JSON sidecar file.
-_REGISTRY_FILE = Path("vector_store/documents.json")
-
 _registry: dict[str, dict] = {}
+
+
+def _get_registry_file() -> Path:
+    return get_settings().docs_path
 
 
 def _load_registry() -> None:
     global _registry
-    if _REGISTRY_FILE.exists():
-        with open(_REGISTRY_FILE) as f:
-            _registry = json.load(f)
-        logger.info("Loaded document registry: %d documents", len(_registry))
+    reg_file = _get_registry_file()
+    if reg_file.exists():
+        try:
+            with open(reg_file, "r", encoding="utf-8") as f:
+                _registry = json.load(f)
+            logger.info("Loaded document registry: %d documents", len(_registry))
+        except Exception as e:
+            logger.warning("Failed to load document registry from %s: %s", reg_file, e)
+            _registry = {}
 
 
 def _save_registry() -> None:
-    _REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(_REGISTRY_FILE, "w") as f:
+    reg_file = _get_registry_file()
+    reg_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(reg_file, "w", encoding="utf-8") as f:
         json.dump(_registry, f, indent=2, default=str)
+
 
 
 def get_document(document_id: str) -> dict | None:
